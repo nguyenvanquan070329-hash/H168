@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>H168 ONLINE - QUÂN</title>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<style>
+body{ margin:0; font-family:Arial; background:#000; color:gold; text-align:center; }
+.card{ background:rgba(20,20,20,0.9); border:1px solid gold; margin:10px auto; padding:15px; width:90%; max-width:350px; border-radius:15px; }
+input{ padding:12px; margin:5px; border-radius:5px; border:none; width:80%; }
+button{ padding:12px; margin:5px; background:linear-gradient(to right,gold,orange); border:none; border-radius:5px; font-weight:bold; width:85%; cursor:pointer; }
+#time{ color:orange; font-size:40px; font-weight:bold; }
+.dot { display:inline-block; width:12px; height:12px; border-radius:50%; margin:2px; }
+.dot-big { background: red; } .dot-small { background: blue; }
+</style>
+</head>
+<body>
+
+<h1 style="margin-top:20px">H168 ONLINE</h1>
+
+<div id="loginPage" class="card">
+  <input id="username" placeholder="Tên tài khoản"><br>
+  <input id="password" type="password" placeholder="Mật khẩu (Admin là 1)"><br>
+  <button onclick="login()">VÀO GAME</button>
+</div>
+
+<div id="gamePage" style="display:none;">
+  <div class="card">
+    <p>Phiên: #<span id="session">0000</span></p>
+    <p>Tiền: <span id="balance" style="color:lime">0</span></p>
+    <div id="time">45</div>
+    <div style="font-size:50px; margin:10px">🎲 🎲 🎲</div>
+    <button onclick="bet('big')">CƯỢC TÀI</button>
+    <button onclick="bet('small')">CƯỢC XỈU</button>
+    <p id="msg"></p>
+    <div id="history"></div>
+  </div>
+</div>
+
+<div id="adminPage" style="display:none;">
+  <div class="card" style="border-color:red">
+    <h2 style="color:red">BÀN ĐIỀU KHIỂN</h2>
+    <button onclick="force('big')">ÉP RA TÀI</button>
+    <button onclick="force('small')">ÉP RA XỈU</button>
+    <p>Lệnh: <span id="cmd" style="color:cyan">RANDOM</span></p>
+  </div>
+</div>
+
+<script>
+// CẤU HÌNH FIREBASE CỦA QUÂN
+const firebaseConfig = { databaseURL: "https://h168-60326-default-rtdb.firebaseio.com/" };
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let user = null;
+
+function login() {
+  const u = document.getElementById('username').value;
+  const p = document.getElementById('password').value;
+  if(!u) return;
+  if(u==='admin' && p==='1') {
+    document.getElementById('loginPage').style.display='none';
+    document.getElementById('adminPage').style.display='block';
+    startClock();
+  } else {
+    user = { name: u, bal: 10000 };
+    document.getElementById('loginPage').style.display='none';
+    document.getElementById('gamePage').style.display='block';
+    document.getElementById('balance').innerText = user.bal;
+  }
+}
+
+function startClock() {
+  setInterval(() => {
+    db.ref('state').once('value', s => {
+      let d = s.val() || {t:45, sess:1001, cmd:'random'};
+      let nt = d.t - 1;
+      if(nt < 0) {
+        nt = 45;
+        db.ref('state').update({sess: d.sess+1, cmd:'random'});
+      }
+      db.ref('state').update({t: nt});
+    });
+  }, 1000);
+}
+
+function force(c) { db.ref('state').update({cmd: c}); }
+
+db.ref('state').on('value', s => {
+  let d = s.val(); if(!d) return;
+  document.getElementById('time').innerText = d.t;
+  document.getElementById('session').innerText = d.sess;
+  if(document.getElementById('cmd')) document.getElementById('cmd').innerText = d.cmd.toUpperCase();
+});
+
+function bet(c) {
+  let a = prompt("Nhập tiền cược:");
+  if(a > 0 && a <= user.bal) {
+    user.bal -= a;
+    document.getElementById('balance').innerText = user.bal;
+    document.getElementById('msg').innerText = "Đã cược " + a + " vào " + c;
+  }
+}
+</script>
+</body>
+</html>
