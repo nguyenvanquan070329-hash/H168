@@ -139,7 +139,7 @@ button:hover{
 
 <!-- ADMIN -->
 <div id="adminPage" style="display:none;">
-  <h2>👑 ADMIN PANEL</h2>
+  <h2>👑 QUÂN </h2>
   <div id="userList"></div>
   <button onclick="logout()">Đăng xuất</button>
 </div>
@@ -153,7 +153,7 @@ let users = JSON.parse(localStorage.getItem("users"));
 if(!users){
   users = [
     {username:"admin", password:"Quan@0055", approved:true, role:"admin"},
-    {username:"user1", password:"111111", approved:true, role:"user", balance:1000}
+    {username:"samngao123", password:"sam123", approved:true, role:"user", balance:1000}
   ];
   saveUsers();
 }
